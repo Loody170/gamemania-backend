@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 exports.getGames = async (query) => {
+    // console.log(process.env.CLIENT_ID);
    
     try {
         const response = await fetch('https://api.igdb.com/v4/games', {
