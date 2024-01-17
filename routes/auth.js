@@ -31,6 +31,8 @@ router.put('/signup', [
     .withMessage("Please enter a valid username")
 ], authController.signup);
 
-router.post('/login', authController.login);
+router.post('/signin', [
+    body("email").normalizeEmail()
+], authController.signin);
 
 module.exports = router;

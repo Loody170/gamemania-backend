@@ -1,6 +1,8 @@
 const User = require('../models/user');
 const { validationResult } = require('express-validator');
+require('dotenv').config();
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 exports.signup = async (req, res, next) => {
     const errors = validationResult(req);
@@ -83,16 +85,18 @@ exports.signup = async (req, res, next) => {
     // }
 };
 
-exports.login = async (req, res, next) => {
+exports.signin = async (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
+    console.log("email and password are", email, password);
     let loadedUser;
     User.findOne({email: email})
     .then(user => {
         if (!user) {
             const error = new Error("A user with this email could not be found.");
             error.statusCode = 401;
-            throw error;
+            // throw error;
+            return next(error);
         }
         loadedUser = user;
         return bcrypt.compare(password, user.password);
@@ -103,9 +107,17 @@ exports.login = async (req, res, next) => {
             error.statusCode = 401;
             throw error;
         }
-        res.status(200).json({
-            message: "Login successful!",
+        const jwtSecret = process.env.JWT_SECRET;
+        const token = jwt.sign({
+            email: loadedUser.email,
             userId: loadedUser._id.toString()
+
+        }, jwtSecret, {expiresIn: '1h'});
+        res.status(200).json({
+            token: token,
+            message: "Login successful!",
+            userId: loadedUser._id.toString(),
+            username: loadedUser.username
         });
     })
     .catch(err => {
