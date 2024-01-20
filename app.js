@@ -3,6 +3,7 @@ const homeRoutes = require('./routes/home');
 const gamesRoutes = require('./routes/games');
 const categoriesRoutes = require('./routes/categories');
 const authRoutes = require('./routes/auth');
+const usersRoutes = require('./routes/users');
 
 
 const express = require('express');
@@ -36,11 +37,19 @@ app.use("/auth", (req, res, next) => {
     next();
 }, authRoutes);
 
+app.use("/users", (req, res, next) => {
+    console.log(req.method);
+    // console.log("req of signup is",req.body);
+    console.log("going to users routes");
+    next();
+}, usersRoutes);
+
 app.use((error, req, res, next) => {
     console.log("error is", error);
     const status = error.statusCode || 500;
     const message = error.message;
     const data = error.data;
+    console.log("status is", status);
     res.status(status).json({message: message, data: data});
 });
 
@@ -55,6 +64,8 @@ async function startApp() {
         app.listen(8080);
     } catch (err) {
         console.log(err);
+        // app.listen(8080);
+
     }
 }
 startApp();

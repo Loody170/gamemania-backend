@@ -14,19 +14,13 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
-    
-    // games: [
-    //     {
-    //         type: Schema.Types.ObjectId,
-    //         ref: 'Game'
-    //     }
-    // ],
-    // categories: [
-    //     {
-    //         type: Schema.Types.ObjectId,
-    //         ref: 'Category'
-    //     }
-    // ]
+    lists: [
+        {
+            name: { type: String, required: true },
+            description: { type: String, required: true },
+            games: [String]
+        }
+    ]
 });
 
 module.exports = mongoose.model('User', userSchema);

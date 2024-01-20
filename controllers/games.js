@@ -8,7 +8,7 @@ exports.getGameDetails = async (req, res, next) => {
 fields name, cover.image_id, first_release_date,involved_companies.company.name, 
 involved_companies.developer, involved_companies.publisher, genres.name,
 platforms.name, summary, rating, rating_count, player_perspectives.name, themes.name, game_engines.name,
-game_modes.name, screenshots.image_id, videos.video_id;
+game_modes.name, screenshots.image_id, videos.video_id, websites.category, websites.url;
 where id=${id};    
 `;
 
@@ -146,6 +146,7 @@ const processGameDetails = (gameDetails) => {
         videos,
         summary,
         themes,
+        websites,
     } = gameDetails[0];
 
     // Extract image URL for the cover, if available
@@ -196,6 +197,8 @@ const processGameDetails = (gameDetails) => {
         videos?.map((video) =>
             video.video_id)
         || [];
+        const gameWebsites = websites && websites.length > 0 ? websites : []
+
 
     // Return the processed data
 
@@ -213,6 +216,7 @@ const processGameDetails = (gameDetails) => {
             summary,
             rating: Math.floor(rating),
             rating_count,
+            gameWebsites,
         },
         extraDetails: {
             themesNames,
