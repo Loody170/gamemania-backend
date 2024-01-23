@@ -10,6 +10,8 @@ router.post("/lists", usersController.addList);
 
 router.get("/lists", usersController.getLists);
 
+router.get("/lists/:listId", usersController.getListGames);
+
 router.put("/lists/:listId", usersController.editList);
 
 router.delete("/lists/:listId", usersController.deleteList);

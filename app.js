@@ -4,6 +4,7 @@ const gamesRoutes = require('./routes/games');
 const categoriesRoutes = require('./routes/categories');
 const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
+require('dotenv').config();
 
 
 const express = require('express');
@@ -59,13 +60,13 @@ app.use((error, req, res, next) => {
 // const server = app.listen(8080);
 async function startApp() {
     try {
-        await mongoose.connect("mongodb+srv://loody:BjZx6z8BFGbYGDQe@gamemania.kikgazp.mongodb.net/gamemania?retryWrites=true&w=majority");
+        await mongoose
+        .connect(`mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@gamemania.kikgazp.mongodb.net/gamemania?retryWrites=true&w=majority`);
         console.log("connected");
         app.listen(8080);
     } catch (err) {
         console.log(err);
         // app.listen(8080);
-
     }
 }
 startApp();

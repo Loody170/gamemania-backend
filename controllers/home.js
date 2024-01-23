@@ -1,6 +1,6 @@
 const { getGames } = require('../http');
 
-exports.getNewGames = async (req, res, next) => {
+exports.getAnticipatedGames = async (req, res, next) => {
   const newReleasesRequestBody = getNewReleasesQuery();
   try {
     console.log("before getting new games and calling");
@@ -67,19 +67,19 @@ exports.getBestGames = async (req, res, next) => {
   let queryConditions = "";
   if (platform === "playstation") {
     queryConditions = `
-    where platforms = (48, 167) & platforms != (169, 49, 9,130 )  &
+    where themes != (42) & platforms = (48, 167) & platforms != (169, 49, 9,130 )  &
      category != (1, 2, 5, 10) & rating != null & rating_count >100;
      `;
   }
   else if (platform === "xbox") {
     queryConditions = `
-    where platforms = (169, 49) & platforms != (9, 130, 48, 167) 
+    where themes != (42) & platforms = (169, 49) & platforms != (9, 130, 48, 167) 
     & category != (1, 2, 5, 10) & rating != null & rating_count >100; 
      `;
   }
   else if (platform === "switch") {
     queryConditions = `
-    where platforms = (130) & platforms != ( 9, 48, 167,169,49)  
+    where themes != (42) & platforms = (130) & platforms != ( 9, 48, 167,169,49)  
     & category != (1, 2, 5, 10) & rating != null & rating_count >100; 
      `;
   }
@@ -148,7 +148,7 @@ const processGameData = (games) => {
 
 const getNewReleasesQuery = () => {
   // Calculate a date representing the last 30 days in Unix timestamp format
-  const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 30;
+  // const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 30;
   //   const requestBody = `
   // fields name, cover.image_id, genres.name, rating, release_dates.date, release_dates.human, release_dates.platform.name, release_dates.platform.platform_logo.image_id; 
   // where release_dates.date > ${thirtyDaysAgo} & release_dates.date <= ${Math.floor(Date.now() / 1000)}; 
@@ -156,13 +156,15 @@ const getNewReleasesQuery = () => {
   // limit 10;
   // `;
 
+  const threeMonthsLater = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 90;
+
   const requestBody = `
-fields name, cover.image_id, genres.name, rating, first_release_date, platforms.name;
-where  first_release_date > ${thirtyDaysAgo} & first_release_date <= ${Math.floor((new Date() - 2 * 24 * 60 * 60 * 1000) / 1000)} &
-release_dates.platform = (167,169,6,48,49,130) & category != (1, 2, 5, 10); 
-sort first_release_date desc;
-limit 10;
-`
+  fields name, cover.image_id, genres.name, rating, first_release_date, platforms.name;
+  where themes != (42) & first_release_date > ${Math.floor(Date.now() / 1000)} & first_release_date <= ${threeMonthsLater} &
+  release_dates.platform = (167,169,6,48,49,130) & category != (1, 2, 5, 10);
+  sort hypes desc;
+  limit 10;
+  `
   return requestBody;
 };
 
@@ -171,7 +173,7 @@ const getUpcomingGamesQuery = () => {
   const fourteenDaysLater = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 14;
   const requestBody = `
 fields name, cover.image_id, genres.name, rating, first_release_date, platforms.name;
-where first_release_date > ${Math.floor(Date.now() / 1000)} & first_release_date <= ${fourteenDaysLater} &
+where themes != (42) & first_release_date > ${Math.floor(Date.now() / 1000)} & first_release_date <= ${fourteenDaysLater} &
 release_dates.platform = (167,169,6,48,49,130) & category != (1, 2, 5, 10); 
 sort first_release_date desc;
 limit 10;
@@ -184,7 +186,7 @@ const getRecentTopGamesQuery = () => {
   const sixtyDaysBefore = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 60;
   const requestBody = `
 fields name, cover.image_id, genres.name, rating, first_release_date, platforms.name;
-where first_release_date > ${sixtyDaysBefore} & first_release_date <= ${Math.floor(Date.now() / 1000)} &
+where themes != (42) & first_release_date > ${sixtyDaysBefore} & first_release_date <= ${Math.floor(Date.now() / 1000)} &
 release_dates.platform = (167,169,6,48,49,130) & category != (1, 2, 5, 10) & rating != null; 
 sort rating desc;
 limit 10;

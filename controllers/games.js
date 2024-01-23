@@ -33,7 +33,7 @@ exports.getSimilarGames = async (req, res, next) => {
     console.log("id is in this controller", id);
     const queryBody = `
 fields similar_games.name, similar_games.cover.image_id, similar_games.genres.name, similar_games.platforms.name;
-where id=${id};
+where themes != (42) & id=${id};
 limit 10;    
 `;
 
@@ -58,7 +58,7 @@ exports.getSearchResults = async (req, res, next) => {
     const queryBody = `
 fields name, cover.image_id,first_release_date;
 search "${query}";
-where category != (1, 2, 3, 5, 10, 12, 13, 14);
+where themes != (42) & category != (1, 2, 3, 5, 10, 12, 13, 14);
 limit 5;
 `;
 
@@ -103,7 +103,7 @@ exports.getAllSearchResults = async (req, res, next) => {
     const queryBody = `
 fields name, cover.image_id, first_release_date, rating, rating_count;
 search "${query}";
-where category != (1, 2, 3, 5, 10, 12, 13, 14);
+where themes != (42) & category != (1, 2, 3, 5, 10, 12, 13, 14);
 limit 30;
 `;
 

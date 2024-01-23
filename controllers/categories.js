@@ -29,7 +29,7 @@ exports.getCategoryGames = async (req, res, next) => {
 
     const queryBody = `
     fields name, cover.image_id, first_release_date, rating, rating_count;
-    where ${condition} & first_release_date <= ${Math.floor(Date.now() / 1000)};
+    where themes != (42) & ${condition} & first_release_date <= ${Math.floor(Date.now() / 1000)};
     sort ${sortCondition};
     limit ${limit};
     offset ${(page-1)*limit};

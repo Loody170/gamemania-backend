@@ -5,7 +5,7 @@ const router = express.Router();
 
 module.exports = router;
 
-router.get('/newgames', homeController.getNewGames);
+router.get('/anticipatedgames', homeController.getAnticipatedGames);
 
 router.get('/upcomingGames', homeController.getUpcomingGames);
 

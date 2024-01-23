@@ -1,3 +1,4 @@
+const {processedGames} = require('../controllers/categories');
 const User = require('../models/user');
 const { getGames } = require('../http');
 exports.addList = async (req, res, next) => {
@@ -29,12 +30,57 @@ exports.addList = async (req, res, next) => {
     }
 };
 
+exports.getListGames = async (req, res, next) => {
+    const { userId } = req;
+    const { listId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            const error = new Error('User not found');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        const list = user.lists.find(list => list._id.toString() === listId);
+        if (!list) {
+            const error = new Error('List not found');
+            error.statusCode = 404;
+            throw error;
+        }
+
+        if (list.games.length === 0) {
+            return res.status(200).json({
+                message: 'No games in this list.',
+                data: [],
+            });
+        }
+        console.log("list is", list
+        );
+        const queryBody = `
+fields name, cover.image_id, first_release_date, total_rating;
+where id = (${list.games.join(',')});
+`;
+        const games = await getGames(queryBody);
+        const filtredGames = processedGames(games);
+        res.status(200).json({
+            message: 'Fetched search results successfully.',
+            data: filtredGames,
+        });
+        console.log("after getting all list games and responding");
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 
 exports.editList = async (req, res, next) => {
     const { userId } = req;
     const { listId } = req.params;
     const { name, description } = req.body;
-console.log(req.params);
+    console.log(req.params);
     try {
         const user = await User.findById(userId);
         if (!user) {
@@ -76,7 +122,7 @@ exports.getLists = async (req, res, next) => {
             let coverImage = null;
 
             if (latestGameId) {
-               coverImage = await getCoverImage(latestGameId);
+                coverImage = await getCoverImage(latestGameId);
             }
 
             return {
@@ -191,7 +237,7 @@ where id=${id};
     try {
         const gameCoverId = await getGames(queryBody);
         let coverImage = "";
-        if( gameCoverId[0].cover.image_id){
+        if (gameCoverId[0].cover.image_id) {
             coverImage = `https://images.igdb.com/igdb/image/upload/t_1080p/${gameCoverId[0].cover.image_id}.jpg`;
         }
         return coverImage;
