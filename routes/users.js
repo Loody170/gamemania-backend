@@ -8,4 +8,16 @@ router.use(authMiddleware.authMiddleware);
 
 router.post("/lists", usersController.addList);
 
+router.get("/lists", usersController.getLists);
+
+router.put("/lists/:listId", usersController.editList);
+
+router.delete("/lists/:listId", usersController.deleteList);
+
+router.post("/lists/:listId/games", usersController.addGame);
+
+router.delete("/lists/:listId/games/:gameId", usersController.deleteGame);
+
+
+
 module.exports = router;
