@@ -1,29 +1,28 @@
 const { getGames } = require('../http');
 
 exports.getAnticipatedGames = async (req, res, next) => {
-  const newReleasesRequestBody = getNewReleasesQuery();
+  const anticipatedGamesRequestBody = getAnticipatedGamesQuery();
   try {
-    console.log("before getting new games and calling");
-    const newReleases = await getGames(newReleasesRequestBody);
-    console.log(newReleases);
-    const filteredNewReleases = processGameData(newReleases);
+    console.log("Getting anticipated games");
+    const anticipatedGames = await getGames(anticipatedGamesRequestBody);
+    const filteredAnticipatedGames = processGameData(anticipatedGames);
     // const arrangedNewReleases = arrangeByLatestRelease(filteredNewReleases);
     res.status(200).json({
-      message: 'Fetched new games successfully.',
-      data: filteredNewReleases,
+      message: 'Fetched anticipated games successfully.',
+      data: filteredAnticipatedGames,
     });
-    console.log("after calling new games and responding");
+    console.log("Anticipated games fetched and sent successfully");
   }//try block
   catch (e) {
     console.log("error is", e.message);
-    res.status(500).send('Error');
+    next(e);
   }//catch
 }
 
 exports.getUpcomingGames = async (req, res, next) => {
   const upcomingGamesRequestBody = getUpcomingGamesQuery();
   try {
-    console.log("before getting upcoming games and calling");
+    console.log("Getting upcoming games");
     const upcomingGamesRequestBody = getUpcomingGamesQuery();
     const upcomingGames = await getGames(upcomingGamesRequestBody);
     const filteredUpcomingGames = processGameData(upcomingGames);
@@ -31,11 +30,11 @@ exports.getUpcomingGames = async (req, res, next) => {
       message: 'Fetched upcoming games successfully.',
       data: filteredUpcomingGames,
     });
-    console.log("after calling upcoming games and responding");
+    console.log("Upcoming games fetched and sent successfully");
   }//try block
   catch (e) {
     console.log("error is", e.message);
-    res.status(500).send('Error');
+    return next(e);
   }//catch
 }
 
@@ -54,7 +53,7 @@ exports.getRecentTopGames = async (req, res, next) => {
   }//try block
   catch (e) {
     console.log("error is", e.message);
-    res.status(500).send('Error');
+    return next(e);
   }//catch
 }
 
@@ -62,7 +61,9 @@ exports.getBestGames = async (req, res, next) => {
   const platform = req.query.platform;
 
   if (!platform) {
-    return res.status(400).json({ error: 'Platform is required' });
+    const error = new Error('Platform is required');
+    error.statusCode = 400;
+    return next(error);
   }
   let queryConditions = "";
   if (platform === "playstation") {
@@ -83,8 +84,10 @@ exports.getBestGames = async (req, res, next) => {
     & category != (1, 2, 5, 10) & rating != null & rating_count >100; 
      `;
   }
-  else{
-    return res.status(400).json({ error: 'Incorrect platform' });
+  else {
+    const error = new Error('incorrect platform');
+    error.statusCode = 400;
+    return next(error);
   }
   const queryBody = `
   fields name, cover.image_id, rating, rating_count, platforms.name;
@@ -93,18 +96,17 @@ exports.getBestGames = async (req, res, next) => {
   limit 10;
   `;
   try {
-    console.log("before getting best games and calling");
+    console.log("Getting best games for", platform);
     const bestGames = await getGames(queryBody);
-    console.log(bestGames);
     res.status(200).json({
       message: 'Fetched best games successfully.',
       data: bestGames,
     });
-    console.log("after calling best and responding");
+    console.log("Best games for", platform, "fetched and sent successfully");
   }//try block
   catch (e) {
     console.log("error is", e.message);
-    res.status(500).send('Error');
+    return next(e);
   }//catch
 }
 
@@ -146,18 +148,9 @@ const processGameData = (games) => {
   });
 };
 
-const getNewReleasesQuery = () => {
-  // Calculate a date representing the last 30 days in Unix timestamp format
-  // const thirtyDaysAgo = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 30;
-  //   const requestBody = `
-  // fields name, cover.image_id, genres.name, rating, release_dates.date, release_dates.human, release_dates.platform.name, release_dates.platform.platform_logo.image_id; 
-  // where release_dates.date > ${thirtyDaysAgo} & release_dates.date <= ${Math.floor(Date.now() / 1000)}; 
-  // sort release_dates.human desc; 
-  // limit 10;
-  // `;
-
+const getAnticipatedGamesQuery = () => {
+  // Calculate a date representing the next 90th day in Unix timestamp format
   const threeMonthsLater = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 90;
-
   const requestBody = `
   fields name, cover.image_id, genres.name, rating, first_release_date, platforms.name;
   where themes != (42) & first_release_date > ${Math.floor(Date.now() / 1000)} & first_release_date <= ${threeMonthsLater} &
@@ -169,7 +162,7 @@ const getNewReleasesQuery = () => {
 };
 
 const getUpcomingGamesQuery = () => {
-  // Calculate a date representing the last 30 days in Unix timestamp format
+  // Calculate a date representing the next 14th day in Unix timestamp format
   const fourteenDaysLater = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 14;
   const requestBody = `
 fields name, cover.image_id, genres.name, rating, first_release_date, platforms.name;
@@ -182,7 +175,7 @@ limit 10;
 };
 
 const getRecentTopGamesQuery = () => {
-  // Calculate a date representing the last 30 days in Unix timestamp format
+  // Calculate a date representing the last 60 days in Unix timestamp format
   const sixtyDaysBefore = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 60;
   const requestBody = `
 fields name, cover.image_id, genres.name, rating, first_release_date, platforms.name;
@@ -193,73 +186,3 @@ limit 10;
 `;
   return requestBody;
 };
-
-
-
-
-
-// Function to filter and process the data
-// const processGameData = (games) => {
-//   const currentDate = new Date();
-//   const thirtyDaysAgo = currentDate.setDate(currentDate.getDate() - 30);
-
-//   // Filter and process each game
-//   const filteredGames = games.map((game) => {
-//     const { id, cover, genres, name, rating, release_dates } = game;
-
-//     // Filter release dates for the last 30 days
-//     const recentReleaseDates = release_dates
-//       .filter((release) => release.date * 1000 > thirtyDaysAgo)
-//       .map((release) => ({
-//         date: release.date,
-//         human: release.human,
-//       }));
-
-//     // Generate image URL for the cover, if available
-//     const coverImageUrl = cover
-//       ? `https://images.igdb.com/igdb/image/upload/t_1080p/${cover.image_id}.jpg`
-//       : null;
-
-//     // Extract platform information of the recent release dates
-//     const recentPlatforms = release_dates
-//       .filter((release) => release.date * 1000 > thirtyDaysAgo)
-//       .map((release) => {
-//         const { platform } = release;
-
-//         return {
-//           id: platform.id,
-//           name: platform.name,
-//         };
-//       });
-
-//     return {
-//       id,
-//       name,
-//       coverImageUrl,
-//       genres: genres.map((genre) => genre.name),
-//       rating,
-//       recentReleaseDates,
-//       recentPlatforms,
-//     };
-//   });
-
-//   return filteredGames;
-// };
-
-// function arrangeByLatestRelease(filteredArray) {
-//   // Sort the array based on the latest release date
-//   filteredArray.sort((a, b) => {
-//     const dateA = a.recentReleaseDates[0].date;
-//     const dateB = b.recentReleaseDates[0].date;
-//     return dateB - dateA; // Sort in descending order
-//   });
-
-//   return filteredArray;
-// }
-
-// function to prepare the array by filtering then arranging it by calling their respective functions
-// const prepareArray = (gamesList) => {
-//   const filteredList = processGameData(gamesList);
-//   const arrangedList = arrangeByLatestRelease(filteredList);
-//   return arrangedList;
-// };

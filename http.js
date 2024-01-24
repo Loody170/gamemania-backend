@@ -1,8 +1,6 @@
 require('dotenv').config();
 
-exports.getGames = async (query) => {
-    // console.log(process.env.CLIENT_ID);
-   
+exports.getGames = async (query) => {   
     try {
         const response = await fetch('https://api.igdb.com/v4/games', {
             method: 'POST',
@@ -14,7 +12,7 @@ exports.getGames = async (query) => {
             body: query,
         });
         if (!response.ok) {
-            console.log("response when error is", response);
+            console.log("Error response is", response);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         //if no errors, then proceed

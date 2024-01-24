@@ -3,7 +3,6 @@ const { processedGames } = require('./categories');
 
 exports.getGameDetails = async (req, res, next) => {
     const { id } = req.params;
-    console.log("id is", id);
     const queryBody = `
 fields name, cover.image_id, first_release_date,involved_companies.company.name, 
 involved_companies.developer, involved_companies.publisher, genres.name,
@@ -13,14 +12,14 @@ where id=${id};
 `;
 
     try {
+        console.log("Getting game details for", id);
         const gameDetails = await getGames(queryBody);
         const filteredGameDetails = processGameDetails(gameDetails);
-        console.log(filteredGameDetails);
         res.status(200).json({
             message: 'Fetched new games successfully.',
             data: filteredGameDetails,
         });
-        console.log("after calling game details and responding");
+        console.log("Game details for", id, "fetched and sent successfully");
     }//try block
     catch (e) {
         console.log("error is", e.message);
@@ -48,13 +47,12 @@ limit 10;
     }//try block
     catch (e) {
         console.log("error is", e.message);
-        res.status(500).send('Error');
+        return next(e);
     }//catch
 }
 
 exports.getSearchResults = async (req, res, next) => {
     const { query } = req.query;
-    console.log("query is", query);
     const queryBody = `
 fields name, cover.image_id,first_release_date;
 search "${query}";
@@ -63,6 +61,7 @@ limit 5;
 `;
 
     try {
+        console.log("Getting search results for", query);
         const searchResults = await getGames(queryBody);
 
         const filteredSearchResults = searchResults.map((game) => {
@@ -89,17 +88,16 @@ limit 5;
             message: 'Fetched search results successfully.',
             data: filteredSearchResults,
         });
-        console.log("after calling game details and responding");
+        console.log("Search results for", query, "fetched and sent successfully");
     }//try block
     catch (e) {
         console.log("error is", e.message);
-        res.status(500).send('Error');
+        return next(e);
     }//catch
 }
 
 exports.getAllSearchResults = async (req, res, next) => {
     const { query } = req.query;
-    console.log("query is", query);
     const queryBody = `
 fields name, cover.image_id, first_release_date, rating, rating_count;
 search "${query}";
@@ -108,24 +106,20 @@ limit 30;
 `;
 
     try {
+        console.log("Getting all search results for", query);
         const allSearchResults = await getGames(queryBody);
         const processedAllSearchResults = processedGames(allSearchResults);
-        console.log("processed all search results are", processedAllSearchResults);
         res.status(200).json({
             message: 'Fetched search results successfully.',
             data: processedAllSearchResults,
         });
-        console.log("after all search results and responding");
+        console.log("All search results for", query, "fetched and sent successfully");
     }//try block
     catch (e) {
         console.log("error is", e.message);
-        res.status(500).send('Error');
+        return next(e);
     }//catch
 }
-
-
-
-
 
 const processGameDetails = (gameDetails) => {
     if (!gameDetails || gameDetails.length === 0) {
@@ -133,23 +127,9 @@ const processGameDetails = (gameDetails) => {
     }
 
     const {
-        id,
-        cover,
-        first_release_date,
-        game_engines,
-        game_modes,
-        genres,
-        involved_companies,
-        name,
-        platforms,
-        player_perspectives,
-        rating,
-        rating_count,
-        screenshots,
-        videos,
-        summary,
-        themes,
-        websites,
+        id, cover, first_release_date, game_engines, game_modes, genres, 
+        involved_companies, name, platforms, player_perspectives, rating,
+        rating_count, screenshots, videos, summary, themes, websites, 
     } = gameDetails[0];
 
     // Extract image URL for the cover, if available
@@ -188,23 +168,20 @@ const processGameDetails = (gameDetails) => {
     // Extract gamemodes names with check
     const gamemodesNames = game_modes?.map((mode) => mode.name) || [];
 
-    //   // Extract ids of similar games with check
-    //   const similarGamesIds = similar_games?.map((game) => game.id) || [];
-
+    // Extract screenshots URLs with check
     const screenshotsUrls =
         screenshots?.map((screenshot) =>
             `https://images.igdb.com/igdb/image/upload/t_1080p/${screenshot.image_id}.jpg`)
         || [];
 
+    // Extract videos IDs with check
     const videosIds =
         videos?.map((video) =>
             video.video_id)
         || [];
         const gameWebsites = websites && websites.length > 0 ? websites : []
 
-
     // Return the processed data
-
     return {
         id,
         imageUrl,
@@ -252,10 +229,10 @@ const processSimilarGames = (games) => {
 
         return {
             id,
+            name,
             coverImageUrl,
             genres: genresNames,
             platforms: platformsNames,
         };
-
     });
 };

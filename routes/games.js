@@ -11,7 +11,4 @@ router.get('/search', gamesController.getSearchResults);
 
 router.get('/results', gamesController.getAllSearchResults);
 
-// router.get("/coverimage/:id", gamesController.getCoverImage);
-
-
 router.get('/:id', gamesController.getGameDetails);

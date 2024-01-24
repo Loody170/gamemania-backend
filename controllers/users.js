@@ -1,6 +1,7 @@
 const {processedGames} = require('../controllers/categories');
 const User = require('../models/user');
 const { getGames } = require('../http');
+
 exports.addList = async (req, res, next) => {
     const { userId } = req;
     const { name, description } = req.body;
@@ -26,83 +27,6 @@ exports.addList = async (req, res, next) => {
         });
     }
     catch (error) {
-        next(error);
-    }
-};
-
-exports.getListGames = async (req, res, next) => {
-    const { userId } = req;
-    const { listId } = req.params;
-
-    try {
-        const user = await User.findById(userId);
-        if (!user) {
-            const error = new Error('User not found');
-            error.statusCode = 404;
-            throw error;
-        }
-
-        const list = user.lists.find(list => list._id.toString() === listId);
-        if (!list) {
-            const error = new Error('List not found');
-            error.statusCode = 404;
-            throw error;
-        }
-
-        if (list.games.length === 0) {
-            return res.status(200).json({
-                message: 'No games in this list.',
-                data: [],
-            });
-        }
-        console.log("list is", list
-        );
-        const queryBody = `
-fields name, cover.image_id, first_release_date, total_rating;
-where id = (${list.games.join(',')});
-`;
-        const games = await getGames(queryBody);
-        const filtredGames = processedGames(games);
-        res.status(200).json({
-            message: 'Fetched search results successfully.',
-            data: filtredGames,
-        });
-        console.log("after getting all list games and responding");
-
-    } catch (error) {
-        next(error);
-    }
-};
-
-
-
-exports.editList = async (req, res, next) => {
-    const { userId } = req;
-    const { listId } = req.params;
-    const { name, description } = req.body;
-    console.log(req.params);
-    try {
-        const user = await User.findById(userId);
-        if (!user) {
-            const error = new Error('User not found');
-            error.statusCode = 404;
-            throw error;
-        }
-
-        const list = user.lists.find(list => list._id.toString() === listId);
-        if (!list) {
-            const error = new Error('List not found');
-            error.statusCode = 404;
-            throw error;
-        }
-
-        list.name = name;
-        list.description = description;
-
-        await user.save();
-
-        res.status(200).json({ message: 'List updated successfully', list });
-    } catch (error) {
         next(error);
     }
 };
@@ -137,10 +61,11 @@ exports.getLists = async (req, res, next) => {
     }
 };
 
-exports.deleteList = async (req, res, next) => {
+exports.editList = async (req, res, next) => {
     const { userId } = req;
     const { listId } = req.params;
-
+    const { name, description } = req.body;
+    console.log(req.params);
     try {
         const user = await User.findById(userId);
         if (!user) {
@@ -156,21 +81,85 @@ exports.deleteList = async (req, res, next) => {
             throw error;
         }
 
-        user.lists = user.lists.filter(list => list._id.toString() !== listId);
+        list.name = name;
+        list.description = description;
 
         await user.save();
 
+        res.status(200).json({ message: 'List updated successfully', list });
+    } catch (error) {
+        next(error);
+    }
+};
+
+exports.deleteList = async (req, res, next) => {
+    const { userId } = req;
+    const { listId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            const error = new Error('User not found');
+            error.statusCode = 404;
+            throw error;
+        }
+        const list = user.lists.find(list => list._id.toString() === listId);
+        if (!list) {
+            const error = new Error('List not found');
+            error.statusCode = 404;
+            throw error;
+        }
+        user.lists = user.lists.filter(list => list._id.toString() !== listId);
+        await user.save();
         res.status(200).json({ message: 'List deleted successfully' });
     } catch (error) {
         next(error);
     }
 };
 
+exports.getListGames = async (req, res, next) => {
+    const { userId } = req;
+    const { listId } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            const error = new Error('User not found');
+            error.statusCode = 404;
+            throw error;
+        }
+        const list = user.lists.find(list => list._id.toString() === listId);
+        if (!list) {
+            const error = new Error('List not found');
+            error.statusCode = 404;
+            throw error;
+        }
+        if (list.games.length === 0) {
+            return res.status(200).json({
+                message: 'No games in this list.',
+                data: [],
+            });
+        }
+
+        const queryBody = `
+fields name, cover.image_id, first_release_date, total_rating;
+where id = (${list.games.join(',')});
+`;
+        const games = await getGames(queryBody);
+        const filtredGames = processedGames(games);
+        res.status(200).json({
+            message: 'List games fetched successfully.',
+            data: filtredGames,
+        });
+        console.log("List games fetched successfully.");
+    } catch (error) {
+        next(error);
+    }
+};
 
 exports.addGame = async (req, res, next) => {
     const { userId } = req;
     const { listId } = req.params;
-    console.log(req.params);
     const { game } = req.body;
 
     try {
@@ -192,7 +181,7 @@ exports.addGame = async (req, res, next) => {
         await user.save();
 
         res.status(201).json({ message: 'Game added' });
-        console.log("game added");
+        console.log("Game added to list successfully.");
     } catch (error) {
         next(error);
     }
@@ -220,19 +209,14 @@ exports.deleteGame = async (req, res, next) => {
         await user.save();
 
         res.status(200).json({ message: 'Game deleted' });
+        console.log("Game deleted from list successfully.");
     } catch (error) {
         next(error);
     }
 };
 
-
-
 const getCoverImage = async (id) => {
-    console.log("id is for cover", id);
-    const queryBody = `
-fields cover.image_id;
-where id=${id};    
-`;
+    const queryBody = `fields cover.image_id; where id=${id};`;
 
     try {
         const gameCoverId = await getGames(queryBody);
@@ -244,6 +228,6 @@ where id=${id};
     }//try block
     catch (e) {
         console.log("error is", e.message);
-        res.status(500).send('Error');
+        return next(e);
     }//catch
 }
