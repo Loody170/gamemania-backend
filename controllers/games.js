@@ -13,10 +13,10 @@ where id=${id};
 
     try {
         console.log("Getting game details for", id);
-        const gameDetails = await getGames(queryBody);
+        const gameDetails = await getGames(queryBody, req.token );
         const filteredGameDetails = processGameDetails(gameDetails);
         res.status(200).json({
-            message: 'Fetched new games successfully.',
+            message: 'Fetched game details successfully.',
             data: filteredGameDetails,
         });
         console.log("Game details for", id, "fetched and sent successfully");
@@ -29,7 +29,7 @@ where id=${id};
 
 exports.getSimilarGames = async (req, res, next) => {
     const id = req.query.id;
-    console.log("id is in this controller", id);
+    console.log("getting similar games for game with id", id);
     const queryBody = `
 fields similar_games.name, similar_games.cover.image_id, similar_games.genres.name, similar_games.platforms.name;
 where themes != (42) & id=${id};
@@ -37,7 +37,7 @@ limit 10;
 `;
 
     try {
-        const similarGames = await getGames(queryBody);
+        const similarGames = await getGames(queryBody, req.token);
         const filteredSimilarGames = processSimilarGames(similarGames[0].similar_games);
         res.status(200).json({
             message: 'Fetched similar games successfully.',
@@ -62,7 +62,7 @@ limit 5;
 
     try {
         console.log("Getting search results for", query);
-        const searchResults = await getGames(queryBody);
+        const searchResults = await getGames(queryBody, req.token);
 
         const filteredSearchResults = searchResults.map((game) => {
             const { id, name, cover, first_release_date } = game;
@@ -107,7 +107,7 @@ limit 30;
 
     try {
         console.log("Getting all search results for", query);
-        const allSearchResults = await getGames(queryBody);
+        const allSearchResults = await getGames(queryBody, );
         const processedAllSearchResults = processedGames(allSearchResults);
         res.status(200).json({
             message: 'Fetched search results successfully.',
@@ -215,7 +215,6 @@ const processSimilarGames = (games) => {
 
     return games.map((game) => {
         const { id, name, cover, genres, platforms } = game;
-        console.log(game);
         // Extract image URL for the cover, if available
         const coverImageUrl = cover
             ? `https://images.igdb.com/igdb/image/upload/t_1080p/${cover.image_id}.jpg`

@@ -3,6 +3,7 @@ const gamesRoutes = require('./routes/games');
 const categoriesRoutes = require('./routes/categories');
 const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users');
+const apiAuthMiddleware = require('./api-auth-middleware');
 require('dotenv').config();
 
 const express = require('express');
@@ -12,6 +13,8 @@ const mongoose = require('mongoose');
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use(apiAuthMiddleware.apiAuthMiddleware);
 
 app.use("/", (req, res, next) => {
     next();
@@ -43,9 +46,9 @@ app.use((error, req, res, next) => {
 async function startApp() {
     try {
         await mongoose
-            .connect(`mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@gamemania.kikgazp.mongodb.net/gamemania?retryWrites=true&w=majority`);
+            .connect(`mongodb+srv://${process.env.MONGO_DB_USERNAME}:${process.env.MONGO_DB_PASSWORD}@gamemania.kikgazp.mongodb.net/${process.env.MONGO_DB_DEFAULT_DATABASE}?retryWrites=true&w=majority`);
         console.log("connected");
-        app.listen(8080);
+        app.listen(process.env.PORT || 8080);
     } catch (err) {
         console.log(err);
     }

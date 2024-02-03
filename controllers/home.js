@@ -4,7 +4,7 @@ exports.getAnticipatedGames = async (req, res, next) => {
   const anticipatedGamesRequestBody = getAnticipatedGamesQuery();
   try {
     console.log("Getting anticipated games");
-    const anticipatedGames = await getGames(anticipatedGamesRequestBody);
+    const anticipatedGames = await getGames(anticipatedGamesRequestBody, req.token);
     const filteredAnticipatedGames = processGameData(anticipatedGames);
     // const arrangedNewReleases = arrangeByLatestRelease(filteredNewReleases);
     res.status(200).json({
@@ -24,7 +24,7 @@ exports.getUpcomingGames = async (req, res, next) => {
   try {
     console.log("Getting upcoming games");
     const upcomingGamesRequestBody = getUpcomingGamesQuery();
-    const upcomingGames = await getGames(upcomingGamesRequestBody);
+    const upcomingGames = await getGames(upcomingGamesRequestBody, req.token);
     const filteredUpcomingGames = processGameData(upcomingGames);
     res.status(200).json({
       message: 'Fetched upcoming games successfully.',
@@ -42,8 +42,7 @@ exports.getRecentTopGames = async (req, res, next) => {
   const recentTopGamesBody = getRecentTopGamesQuery();
   try {
     console.log("before getting top games and calling");
-    const recentTopGames = await getGames(recentTopGamesBody);
-    console.log(recentTopGames);
+    const recentTopGames = await getGames(recentTopGamesBody, req.token);
     const filteredRecentTopGames = processGameData(recentTopGames);
     res.status(200).json({
       message: 'Fetched recent top games successfully.',
@@ -97,7 +96,7 @@ exports.getBestGames = async (req, res, next) => {
   `;
   try {
     console.log("Getting best games for", platform);
-    const bestGames = await getGames(queryBody);
+    const bestGames = await getGames(queryBody, req.token);
     res.status(200).json({
       message: 'Fetched best games successfully.',
       data: bestGames,
@@ -132,9 +131,9 @@ const processGameData = (games) => {
       month: 'long',
       day: 'numeric',
     });
-    if (!rating) {
-      console.log("rating is null");
-    }
+    // if (!rating) {
+    //   console.log("rating is null");
+    // }
     // Creating the processed game object
     return {
       id,

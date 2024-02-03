@@ -1,13 +1,15 @@
 require('dotenv').config();
 
-exports.getGames = async (query) => {   
+exports.getGames = async (query, token) => {
+    console.log("token inside getgames is", token);  
     try {
         const response = await fetch('https://api.igdb.com/v4/games', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",
                 "Client-ID": process.env.CLIENT_ID,
-                "Authorization": process.env.AUTHORIZATION
+                "Authorization": `Bearer ${token}`
+                // process.env.AUTHORIZATION
             },
             body: query,
         });

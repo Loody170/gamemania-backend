@@ -46,7 +46,7 @@ exports.getLists = async (req, res, next) => {
             let coverImage = null;
 
             if (latestGameId) {
-                coverImage = await getCoverImage(latestGameId);
+                coverImage = await getCoverImage(latestGameId, req.token);
             }
 
             return {
@@ -145,7 +145,7 @@ exports.getListGames = async (req, res, next) => {
 fields name, cover.image_id, first_release_date, total_rating;
 where id = (${list.games.join(',')});
 `;
-        const games = await getGames(queryBody);
+        const games = await getGames(queryBody, req.token);
         const filtredGames = processedGames(games);
         res.status(200).json({
             message: 'List games fetched successfully.',
@@ -215,11 +215,11 @@ exports.deleteGame = async (req, res, next) => {
     }
 };
 
-const getCoverImage = async (id) => {
+const getCoverImage = async (id, token) => {
     const queryBody = `fields cover.image_id; where id=${id};`;
 
     try {
-        const gameCoverId = await getGames(queryBody);
+        const gameCoverId = await getGames(queryBody, token);
         let coverImage = "";
         if (gameCoverId[0].cover.image_id) {
             coverImage = `https://images.igdb.com/igdb/image/upload/t_1080p/${gameCoverId[0].cover.image_id}.jpg`;

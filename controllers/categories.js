@@ -27,7 +27,7 @@ exports.getCategoryGames = async (req, res, next) => {
 `;
     try {
         console.log("Getting category games for", type, slug);
-        const games = await getGames(queryBody);
+        const games = await getGames(queryBody, );
         const filteredGames = exports.processedGames(games);
         res.status(200).json({
             message: 'Fetcheds games successfully.',
