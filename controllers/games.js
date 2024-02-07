@@ -107,7 +107,7 @@ limit 30;
 
     try {
         console.log("Getting all search results for", query);
-        const allSearchResults = await getGames(queryBody, );
+        const allSearchResults = await getGames(queryBody, req.token);
         const processedAllSearchResults = processedGames(allSearchResults);
         res.status(200).json({
             message: 'Fetched search results successfully.',
